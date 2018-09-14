@@ -1,0 +1,231 @@
+#include <DS1302RTC.h>
+#include <TimeLib.h>
+#include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel pixel = Adafruit_NeoPixel(30, 4, NEO_GRB+NEO_KHZ800);
+
+DS1302RTC RTC(7, 6, 5);  //set pin: CE(RST), IO(DAT), CLK
+tmElements_t tm; //시간 데이터를 저장하는 변수
+time_t t;
+
+int hours, minutes, seconds;
+
+void setup() {
+  Serial.begin(9600);
+  pixel.begin();
+
+  for(int i=0; i<30; i++){
+    pixel.setPixelColor(i, 255, 255, 255);
+    pixel.show();
+    delay(10);
+  }
+  pixel.clear();
+
+  if(RTC.haltRTC()){ //clock 정지 체크, 1이면 정지
+    Serial.println("DS1302 sleep");
+    RTC.haltRTC(0);
+    Serial.println("DS1302 start");
+    delay(100);
+  }
+  else{ //0이면 기상 상태
+    Serial.println("DS1302 wake up");
+  }
+
+  if(RTC.writeEN() == 0){ // 쓰기 불가능
+    Serial.println("The DS1302 is write protected");
+    RTC.writeEN(true);
+    Serial.println("The DS1302 is can protected");
+  }
+  else{ //쓰기 가능
+    Serial.println("The DS1302 is can protected");
+  }
+
+  /*
+  tm.Year = CalendarYrToTm(2018);
+  tm.Month = 9;
+  tm.Day = 14;
+  tm.Hour =12;
+  tm.Minute = 43;
+  tm.Second = 0;
+
+  t = makeTime(tm); 
+ 
+    if(RTC.write(tm) == 0){
+      Serial.println("Time is set");
+      time_t t = makeTime(tm);
+      setTime(t);
+    }
+  //시간 설정*/
+
+ 
+}
+
+void loop() {
+
+  if(RTC.read(tm)){
+
+    hours = tm.Hour;
+    minutes = tm.Minute;
+    seconds = tm.Second;
+
+    Serial.print(hours);
+    Serial.print(":");
+    Serial.print(minutes);
+    Serial.print(":");
+    Serial.println(seconds);
+  }
+
+  light_hour(hours);
+
+  light_minute(minutes);
+
+  delay(500);
+
+  if(seconds == 0){
+    Serial.println("LED reset");
+    pixel.clear();
+    pixel.show();
+  }
+
+}
+
+void light_hour(int hours){ // 시 출력
+  int red, green, blue;
+  if(hours == 0 || hours == 12){
+    red = 255; green = 100; blue = 150;
+    pixel.setPixelColor(27, red, green, blue); // 열
+    pixel.setPixelColor(29, red, green, blue); // 두
+  }
+  else if(hours == 1 || hours == 13){
+    red = 70; green = 65; blue = 217;
+    pixel.setPixelColor(28, red, green, blue); //한
+  }
+  else if(hours == 2 || hours == 14){
+    red = 255; green = 187; blue = 0;
+    pixel.setPixelColor(27, red, green, blue); // 두
+  }
+  else if(hours == 3 || hours == 15){
+    red = 29; green = 219; blue = 22;
+    pixel.setPixelColor(26, red, green, blue); // 세
+  }
+  else if(hours == 4 || hours == 16){
+    red = 100;  green = 255; blue = 255;
+    pixel.setPixelColor(25, red, green, blue); // 네
+  }
+  else if(hours == 5 || hours == 17){
+    red = 0; green = 0; blue = 255;
+    pixel.setPixelColor(24, red, green, blue); // 다
+    pixel.setPixelColor(19, red, green, blue); // 섯
+  }
+  else if(hours == 6 || hours == 18){
+    red = 0; green = 216; blue = 255;
+    pixel.setPixelColor(18, red, green, blue); // 여
+    pixel.setPixelColor(19, red, green, blue); // 섯
+  }
+  else if(hours == 7 || hours == 19){
+    red = 147; green = 79; blue = 0;
+    pixel.setPixelColor(20, red, green, blue); // 일
+    pixel.setPixelColor(21, red, green, blue); // 곱
+  }
+  else if(hours == 8 || hours == 20){
+    red = 47; green = 157; blue = 39;
+    pixel.setPixelColor(22, red, green, blue); // 여
+    pixel.setPixelColor(23, red, green, blue); // 덟
+  }
+  else if(hours == 9 || hours == 21){
+    red = 165; green = 50; blue = 200;
+    pixel.setPixelColor(17, red, green, blue); // 아
+    pixel.setPixelColor(16, red, green, blue); // 홉
+  }
+  else if(hours == 10 || hours == 22){
+    red = 0; green = 0; blue = 255;
+    pixel.setPixelColor(29, red, green, blue); // 열
+  }
+  else if(hours == 11 || hours == 23){
+    red = 50; green = 255; blue = 50;
+    pixel.setPixelColor(29, red, green, blue); // 열
+    pixel.setPixelColor(28, red, green, blue); // 한
+  }
+  pixel.setPixelColor(15, red, green, blue); //시
+  pixel.show();
+}
+
+void light_minute_first(int minutes){ //일 단위 분 출력
+  if(minutes == 0){
+    
+  }
+  else if(minutes == 1){
+    pixel.setPixelColor(1, 255, 228, 0); //일
+  }
+  else if(minutes == 2){
+    pixel.setPixelColor(2, 255, 228, 0); //이
+  }
+  else if(minutes == 3){
+    pixel.setPixelColor(3, 255, 228, 0); //삼
+  }
+  else if(minutes == 4){
+    pixel.setPixelColor(4, 255, 228, 0); //사
+  }
+  else if(minutes == 5){
+    pixel.setPixelColor(5, 255, 228, 0); //오
+  }
+  else if(minutes == 6){
+    pixel.setPixelColor(11, 255, 228, 0); //육
+  }
+  else if(minutes == 7){
+    pixel.setPixelColor(10, 255, 228, 0); //칠
+  }
+  else if(minutes == 8){
+    pixel.setPixelColor(9, 255, 228, 0); //팔
+  }
+  else if(minutes == 9){
+    pixel.setPixelColor(8, 255, 228, 0); //구
+  }
+}
+
+void light_minute(int minutes){ // 십 단위 분 출력
+
+  int red = random(256);
+  int green = random(256);
+  int blue = random(256);
+  
+  if(minutes == 0){
+    for(int i =0; i<15; i++){
+     pixel.setPixelColor(i, 0, 0, 0); // 0~14 네오픽셀 off
+    }
+  }
+  else{
+    if(minutes < 10){
+      light_minute_first(minutes);
+    }
+    else if(minutes>9 && minutes <20){
+      pixel.setPixelColor(7, 255, 0, 0); //십
+      light_minute_first(minutes-10);
+    }
+    else if(minutes>19 && minutes <30){
+      pixel.setPixelColor(6, 255, 0, 255); //이
+      pixel.setPixelColor(7, 255, 0, 255); //십
+      light_minute_first(minutes-20);
+    }
+    else if(minutes>29 && minutes <40){
+      pixel.setPixelColor(12, 255, 187, 0); //삼
+      pixel.setPixelColor(7, 255, 187, 0); //십
+      light_minute_first(minutes-30);
+    }
+    else if(minutes>39 && minutes<50){
+      pixel.setPixelColor(13, 0, 255, 255); //사
+      pixel.setPixelColor(7, 0, 255, 255); //십
+      light_minute_first(minutes-40);
+    }
+    else if(minutes>49 && minutes<60){
+      pixel.setPixelColor(14, 255, 255, 255); //오
+      pixel.setPixelColor(7, 255, 255, 255); //십
+      
+      light_minute_first(minutes-50);
+    }
+
+    pixel.setPixelColor(0, red, green, blue); //분
+  }
+  pixel.show();
+}
+
+
